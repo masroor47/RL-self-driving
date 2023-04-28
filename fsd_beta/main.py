@@ -15,6 +15,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
+# import torchvision.models as models
 
 
 
@@ -133,6 +134,10 @@ def plot_durations(show_result=False):
             display.display(plt.gcf())
 
 
+def save_model(model, pathname):
+    torch.save(model.state_dict(), pathname)
+
+
 
 
 # set up matplotlib
@@ -170,16 +175,24 @@ if __name__ == "__main__":
 
     n_actions = env.action_space.n
 
+
+
     policy_net = DQN(n_observations, n_actions).to(device)
+    policy_net.name = 'policy_net'
     target_net = DQN(n_observations, n_actions).to(device)
+    target_net.name = 'target_net'
+
     target_net.load_state_dict(policy_net.state_dict())
+    # policy_net.load_state_dict(torch.load('weights/900_episodes/policy_net.pth'))
+    # target_net.load_state_dict(torch.load('weights/900_episodes/target_net.pth'))
+    
 
     optimizer = optim.AdamW(policy_net.parameters(), lr=LR, amsgrad=True)
     memory = ReplayMemory(10000)
 
     steps_done = 0
 
-    episodes = 10
+    episodes = 600
 
     episode_durations = []
 
@@ -223,7 +236,7 @@ if __name__ == "__main__":
                 
             target_net.load_state_dict(target_net_state_dict)
 
-            # env.render()
+            env.render()
 
             time += 1
 
@@ -233,9 +246,9 @@ if __name__ == "__main__":
                 print(f'episode: {e}, time: {time}')
                 break
 
-    # To display a still image
-    # plt.imshow(env.render())
-    # plt.show()
+    # save_model(policy_net, 'weights/900_episodes/policy_net.pth')
+    # save_model(target_net, 'weights/900_episodes/target_net.pth')
+
     print('Complete')
     plot_durations(show_result=True)
     plt.ioff()
